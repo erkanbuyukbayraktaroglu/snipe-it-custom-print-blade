@@ -1,1 +1,240 @@
+<!doctype html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
+<title>Zimmet Formu</title>
+
+<style>
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 12px;
+        margin: 10px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    td, th {
+        border: 1px solid #000;
+        padding: 6px;
+        vertical-align: top;
+    }
+
+    .center { text-align: center; }
+    .bold { font-weight: bold; }
+
+    .logo {
+        width: 120px;
+    }
+
+    .no-border td {
+        border: none;
+    }
+
+    .signature {
+        height: 80px;
+    }
+
+    @page {
+        size: A4;
+        margin: 10mm;
+    }
+</style>
+</head>
+<body>
+
+<table class="no-border" style="width:100%;">
+    <tr>
+        <td style="width:20%; vertical-align: middle;">
+            <img class="logo" src="LOGO URL GIRIN">
+        </td>
+
+        <td style="width:60%;">
+            <div style="display:flex; align-items:center; justify-content:center; height:100%;">
+                <span style="font-weight:bold; font-size:18px;">
+                    ZİMMET FORMU
+                </span>
+            </div>
+        </td>
+
+        <td style="width:20%;"></td>
+    </tr>
+</table>
+
+<br>
+
+<table>
+    <tr>
+        <td class="center bold" colspan="2">MERKEZİN</td>
+    </tr>
+    <tr>
+        <td style="width:25%">Ünvanı</td>
+        <td>DENEME TEKNOLOJİ ŞİRKETİ A.Ş.</td>
+    </tr>
+    <tr>
+        <td>Adresi</td>
+        <td>DENEME ADRESİ İSTANBUL/İSTANBUL</td>
+    </tr>
+</table>
+
+<br>
+
+<table>
+    <tr>
+        <td class="center bold" colspan="2">PERSONELİN</td>
+    </tr>
+    <tr>
+        <td style="width:25%">Adı ve Soyadı</td>
+        <td>{{ $users[0]->display_name ?? '' }}</td>
+    </tr>
+    <tr>
+        <td>Ünvanı</td>
+        <td>{{ $users[0]->jobtitle ?? '' }}</td>
+    </tr>
+    @php $manager = \App\Models\User::find($users[0]->manager_id ?? null); @endphp
+<tr>
+    <td>Bağlı Olduğu Birim / Müdür</td>
+    <td>{{ $users[0]->department->name ?? '' }} | {{ $manager->display_name ?? '' }}{{ !empty($manager->jobtitle) ? ' - '.$manager->jobtitle : '' }}</td>
+</tr>
+    <tr>
+        <td>Kullanıcıya Atanacak Gruplar ve Uygulamalar</td>
+<td>
+    @php
+        $componentNames = collect();
+
+        foreach (($users[0]->assets ?? []) as $asset) {
+            $components = \App\Models\Component::whereHas('assets', function ($q) use ($asset) {
+                $q->where('assets.id', $asset->id);
+            })->get();
+
+            foreach ($components as $component) {
+                $componentNames->push($component->name);
+            }
+        }
+
+        $componentNames = $componentNames->unique()->values();
+    @endphp
+
+    {{ $componentNames->isNotEmpty() ? $componentNames->implode(' | ') : 'Tanımlı bileşen yok' }}
+</td>
+    </td>
+    </tr>
+</table>
+
+<br>
+
+<table>
+    <tr>
+        <td class="center">
+            Yukarıda belirtilen cihazları eksiksiz ve tamamen çalışır halde teslim aldım. İş ve firma prosesleri dışında kullanmayacağımı, kullandığım zaman ise sadece kendimin sorumlu olduğunu beyan ederim.
+        </td>
+    </tr>
+</table>
+
+<br>
+
+<table>
+    <thead>
+        <tr class="center bold">
+            <th style="width:10%">Sıra No</th>
+            <th>Bilgileri</th>
+            <th style="width:10%">Miktar</th>
+            <th style="width:20%">Teslim Tarihi & İmza</th>
+            <th style="width:20%">İade Tarihi & İmza</th>
+        </tr>
+    </thead>
+    <tbody>
+
+        @php $i = 1; @endphp
+
+        {{-- ASSETLER --}}
+        @foreach ($users[0]->assets ?? [] as $asset)
+        <tr>
+            <td class="center">{{ $i++ }}</td>
+            <td>
+       			<b>Üretici:</b> {{ $asset->model->manufacturer->name ?? '' }} | <b>Marka:</b> {{ $asset->model->manufacturer->name ?? '' }} | <b>Model:</b> {{ $asset->model->name ?? '' }} | <b>Seri No:</b> {{ $asset->serial }} <br>
+            </td>
+            <td class="center">1</td>
+            <td></td>
+            <td></td>
+        </tr>
+        @endforeach
+
+        {{-- AKSESUARLAR --}}
+        @if($users[0]->accessories->count() > 0)
+            @foreach ($users[0]->accessories as $accessory)
+            <tr>
+                <td class="center">{{ $i++ }}</td>
+                <td>
+        			<b>Üretici Adı:</b> {{ $accessory->manufacturer->name ?? '' }}  |  <b>Aksesuar Adı:</b> {{ $accessory->name }} |
+                    <b>Kategori:</b> {{ $accessory->category->name ?? '' }} <br>
+                </td>
+                <td class="center">1</td>
+                <td></td>
+                <td></td>
+            </tr>
+            @endforeach
+        @endif
+
+        {{-- BOŞ SATIRLAR --}}
+        @for($j=0;$j<3;$j++)
+        </tr>
+        @endfor
+
+    </tbody>
+</table>
+
+<br>
+
+<table>
+    <tr class="center bold">
+        <td>Teslim Alan Görevli</td>
+        <td>Teslim Eden Personel</td>
+    </tr>
+    <tr>
+        <td class="signature"></td>
+        <td class="signature"></td>
+    </tr>
+</table>
+
+<br>
+
+<table>
+    <tr>
+        <td class="center bold">(Bu bölüm geri teslimde doldurulacaktır)</td>
+    </tr>
+</table>
+
+<table>
+    <tr>
+        <td>Yukarıda tanımı ve özellikleri belirtilen ürün işyerine;</td>
+    </tr>
+</table>
+
+<table>
+    <tr>
+        <td class="bold">Hasarlı ya da Eksik Teslim Alınmış İse Aşağıya Yazınız</td>
+    </tr>
+    <tr>
+        <td style="height:60px;"></td>
+    </tr>
+</table>
+
+<br>
+
+<table>
+    <tr class="center bold">
+        <td>Teslim Eden Personel</td>
+        <td>Teslim Alan Görevli</td>
+    </tr>
+    <tr>
+        <td class="signature"></td>
+        <td class="signature"></td>
+    </tr>
+</table>
+
+</body>
+</html>
